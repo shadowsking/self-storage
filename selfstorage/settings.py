@@ -6,6 +6,8 @@ from environs import Env
 env = Env()
 env.read_env()
 
+TELEGRAM_TOKEN = env.str('TELEGRAM_TOKEN')
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = env.str('SECRET_KEY')
