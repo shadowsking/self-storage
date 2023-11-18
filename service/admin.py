@@ -1,3 +1,8 @@
 from django.contrib import admin
+from service.models import Client, TypeStorage, Address, Storage, Order
 
-# Register your models here.
+admin.site.register(Client)
+admin.site.register(TypeStorage)
+admin.site.register(Address)
+admin.site.register(Storage)
+admin.site.register(Order)
