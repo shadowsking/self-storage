@@ -1,16 +1,7 @@
 from django.db import models
-
-
-class Client(models.Model):
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
-    tg_nickname = models.CharField(max_length=50, unique=True)
-    email = models.EmailField(unique=True)
-    address = models.CharField(max_length=255)
-    phone = models.CharField(max_length=20)
-
-    def __str__(self):
-        return self.first_name
+from django.utils import timezone
+from phonenumber_field.modelfields import PhoneNumberField
+from users.models import User
 
 
 class TypeStorage(models.Model):
@@ -24,25 +15,37 @@ class TypeStorage(models.Model):
 
 class Address(models.Model):
     name = models.CharField(max_length=255)
+    city = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    phone_number = PhoneNumberField(
+        "Номер телефона",
+        null=True,
+        blank=True,
+        unique=True,
+    )
 
     def __str__(self):
         return self.name
 
 
 class Storage(models.Model):
-    type_storage = models.ForeignKey(TypeStorage, on_delete=models.CASCADE)
-    address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    type_storage = models.ForeignKey(TypeStorage, on_delete=models.CASCADE, related_name="storages")
+    address = models.ForeignKey(Address, on_delete=models.CASCADE, related_name="storages")
 
     def __str__(self):
         return self.type_storage.name
 
 
 class Order(models.Model):
-    user = models.ForeignKey(Client, on_delete=models.CASCADE)
-    storage = models.ForeignKey(Storage, on_delete=models.CASCADE)
-    date_at = models.DateField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
+    storage = models.ForeignKey(Storage, on_delete=models.CASCADE, related_name="orders")
+    date_at = models.DateField(default=timezone.now)
     date_to = models.DateField()
     cost = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return self.user
+        return self.user.email
