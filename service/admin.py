@@ -11,7 +11,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 
 @admin.register(Storage)
-class OrderAdmin(admin.ModelAdmin):
+class StorageAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_display = ('name', 'type_storage')
     list_filter = ('type_storage__name', 'address__name',)
