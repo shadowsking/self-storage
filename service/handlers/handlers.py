@@ -14,7 +14,40 @@ bot = TeleBot(
 )
 
 
+@bot.message_handler(state=States.register_state)
+def register(message):
+    email = message.text
+    if "@" not in email:  # todo email validator
+        bot.send_message(message.chat.id, "email некорректный, отправьте повторно")
+        bot.set_state(message.from_user.id, States.register_state, message.chat.id)
+        return
+
+    try:
+        User.objects.create_user(
+            email=email,
+            username=message.from_user.username or message.from_user.id,
+            telegram_id=message.from_user.id,
+        )
+    except:
+        bot.send_message(message.chat.id, "email некорректный или существует, отправьте повторно")
+        bot.set_state(message.from_user.id, States.register_state, message.chat.id)
+        return
+
+    bot.delete_state(message.from_user.id, message.chat.id)
+
+
 @bot.message_handler(commands=["start"])
+def start_handler(message):
+    try:
+        user = User.objects.get(telegram_id=message.from_user.id)
+        if user.is_staff:
+            pass # admin keyboards
+    except User.DoesNotExist:
+        bot.send_message(message.chat.id, "Отправьте адрес электронной почты")
+        bot.set_state(message.from_user.id, States.register_state, message.chat.id)
+
+
+# @bot.message_handler(commands=["start"])
 def client_greeting(message):
     welcome_message = (
         f'Привет, {message.from_user.first_name}!\n'
@@ -30,15 +63,15 @@ def client_greeting(message):
     btn_rules = types.InlineKeyboardButton(
         text="Правила",
         callback_data="rules"
-        )
+    )
     btn_order = types.InlineKeyboardButton(
         text="Заказ бокса",
         callback_data="order"
-        )
+    )
     btn_storage = types.InlineKeyboardButton(
         text="Ваше хранение",
         callback_data="storage"
-        )
+    )
 
     markup.add(btn_rules, btn_order, btn_storage)
 
@@ -50,12 +83,11 @@ def client_greeting(message):
             photo,
             caption=welcome_message,
             reply_markup=markup
-            )
+        )
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "rules")
 def rules_handler(call):
-
     rules_text = (
         "Правила хранения:\n"
         "1. Запрещено хранить легко воспламеняющиеся или взрывоопасные вещества.\n"
@@ -84,7 +116,6 @@ def rules_handler(call):
 
 @bot.callback_query_handler(func=lambda call: call.data == "allowed_items")
 def allowed_items_handler(call):
-
     allowed_items_text = (
         "Разрешенные предметы для хранения:\n"
         "- Сезонные спортивные товары (лыжи, сноуборды, велосипеды).\n"
@@ -128,11 +159,8 @@ def return_to_menu_handler(call):
 
     bot.send_message(call.message.chat.id, text, reply_markup=markup)
 
-
     @bot.callback_query_handler(func=lambda call: call.data == "order")
     def order_button_handler(call):
         user_id = call.from_user.id
         bot.send_message(call.message.chat.id, "Введите ваше имя:")
         bot.register_next_step_handler(call.message, get_user_name, user_id=user_id)
-
-
